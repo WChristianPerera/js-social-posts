@@ -9,7 +9,7 @@
 // 3. Al click su un pulsante "Mi Piace" di un post, se abbiamo già cliccato dobbiamo decrementare il contatore e cambiare il colore del bottone.
 
 
-
+const likedPosts = [3];
 
 const posts = [
     {
@@ -68,3 +68,91 @@ const posts = [
         "created": "2021-03-05"
     }
 ];
+
+
+
+const eleContainer = document.querySelector('#container');
+renderPosts(posts, eleContainer);
+
+
+
+/* Function Definitions */
+
+function renderPosts(arrPosts, eleContainer) {
+	eleContainer.innerHTML = arrPosts.reduce((postsHtml, objPost) => postsHtml + generatePostHtml(objPost), '');
+	const listLikeButtons = eleContainer.querySelectorAll('.like-button');
+	listLikeButtons.forEach(likeButton => likeButton.addEventListener('click', manageLike));
+}
+
+function generatePostHtml(objPost) {
+	return `
+		<div class="post">
+			<div class="post__header">
+				<div class="post-meta">
+					<div class="post-meta__icon">
+						${objPost.author.image ? getProfileImageHtml(objPost) : getNameInitials(objPost.author.name)}
+					</div>
+					<div class="post-meta__data">
+						<div class="post-meta__author">${objPost.author.name}</div>
+						<div class="post-meta__time">${formatIsoToItalianDate(objPost.created)}</div>
+					</div>
+				</div>
+			</div>
+			<div class="post__text">${objPost.content}</div>
+			<div class="post__image">
+				<img src="${objPost.media}" alt="">
+			</div>
+			<div class="post__footer">
+				<div class="likes js-likes">
+					<div class="likes__cta">
+						<a class="like-button ${manageClassLike(objPost)} js-like-button" data-postid="${objPost.id}">
+							<i class="like-button__icon fas fa-thumbs-up" aria-hidden="true"></i>
+							<span class="like-button__label">Mi Piace</span>
+						</a>
+					</div>
+					<div class="likes__counter">
+						Piace a <b id="like-counter-${objPost.id}" class="js-likes-counter">${objPost.likes}</b> persone
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
+}
+
+function manageLike() {
+	const postId = parseInt(this.dataset.postid);
+
+	let variation;
+	if (likedPosts.includes(postId)) {
+		const indexPost = likedPosts.indexOf(postId);
+		likedPosts.splice(indexPost, 1);
+		variation = -1;
+	} else {
+		likedPosts.push(postId);
+		variation = 1;
+	}
+
+	const objPost = posts.find(post => post.id == postId);
+	objPost.likes += variation;
+
+	console.log(likedPosts);
+
+	renderPosts(posts, eleContainer);
+}
+
+function manageClassLike(objPost) {
+	return likedPosts.includes(objPost.id) ? 'like-button--liked' : '';
+}
+
+function formatIsoToItalianDate(isoString) {
+	return isoString.split('-').reverse().join('/');
+}
+
+function getNameInitials(name) {
+	return name.split(' ').reduce((initials, namePart) => initials + namePart[0].toUpperCase(), '');
+}
+
+function getProfileImageHtml(objPost) {
+	return `<img class="profile-pic" src="${objPost.author.image}" alt="${objPost.author.name}">`;
+}
+
